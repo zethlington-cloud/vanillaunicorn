@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Vanilla Unicorn Kassa</title>
+    <style>
+        :root {
+            --bg: #0f0f0f;
+            --card: #1e1e1e;
+            --card-active: #2a2a2a;
+            --text: #ffffff;
+            --text-dim: #a0a0a0;
+            --accent: #1ee990;
+            --danger: #ff5f5f;
+        }
+
+        body { 
+            font-family: -apple-system, sans-serif; 
+            background: var(--bg); 
+            color: var(--text); 
+            margin: 0; 
+            padding: 20px 20px 220px 20px; 
+        }
+
+        h2 { border-bottom: 2px solid var(--accent); padding-bottom: 10px; }
+
+        .item-row { 
+            background: var(--card); 
+            padding: 4px 10px; 
+            border-radius: 16px; 
+            margin-bottom: 4px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between;
+            border: 2px solid transparent;
+        }
+
+        .item-row.has-items { border-color: var(--accent); background: var(--card-active); }
+        .item-info strong { display: block; font-size: 1.05rem; }
+        .item-info small { color: var(--text-dim); }
+        .controls { display: flex; align-items: center; gap: 10px; }
+
+        .step-btn { 
+            background: var(--accent); 
+            border: none; 
+            color: #000; 
+            font-weight: bold;
+            width: 38px; height: 30px; 
+            border-radius: 10px; 
+            font-size: 22px; 
+            cursor: pointer;
+        }
+
+        .qty-input {
+            width: 50px;
+            height: 34px;
+            background: #333;
+            border: 1px solid #444;
+            color: white;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 8px;
+        }
+
+        /* Discount Section Changes */
+        .discount-container {
+            margin: 20px 0;
+            background: var(--card);
+            padding: 15px;
+            border-radius: 12px;
+        }
+
+        .discount-label { display: block; margin-bottom: 10px; font-weight: bold; color: var(--text-dim); }
+
+        .discount-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .disc-btn {
+            flex: 1; /* Makes all 3 buttons equal width */
+            background: #333;
+            color: var(--text-dim);
+            border: 2px solid #444;
+            padding: 12px 0;
+            border-radius: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .disc-btn.active {
+            background: var(--accent);
+            color: #000;
+            border-color: var(--accent);
+        }
+
+        .footer { 
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: rgba(15, 15, 15, 0.98); 
+            padding: 20px; border-top: 1px solid #333;
+            box-shadow: 0 -10px 30px rgba(0,0,0,0.5);
+            z-index: 100;
+        }
+
+        .total-box { font-size: 2rem; font-weight: bold; color: var(--accent); display: flex; justify-content: space-between; }
+        .sub-box { font-size: 1rem; color: var(--text-dim); display: flex; justify-content: space-between; margin-bottom: 5px;}
+
+        .btn-clear { 
+            width: 100%; margin-top: 15px; background: transparent; 
+            color: var(--danger); border: 1px solid var(--danger); 
+            padding: 12px; border-radius: 8px; cursor: pointer;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Vanilla Unicorn Kassa</h2>
+
+    <div id="item-list">
+        <div class="item-row" data-price="120">
+            <div class="item-info"><strong>Daiquiri</strong><small>120kr</small></div>
+            <div class="controls">
+                <button class="step-btn" onclick="step(this, -1)">-</button>
+                <input type="tel" class="qty-input" value="0" oninput="updateRow(this)" onclick="this.select()">
+                <button class="step-btn" onclick="step(this, 1)">+</button>
+            </div>
+        </div>
+
+        <div class="item-row" data-price="140">
+            <div class="item-info"><strong>Champagne</strong><small>140kr</small></div>
+            <div class="controls">
+                <button class="step-btn" onclick="step(this, -1)">-</button>
+                <input type="tel" class="qty-input" value="0" oninput="updateRow(this)" onclick="this.select()">
+                <button class="step-btn" onclick="step(this, 1)">+</button>
+            </div>
+        </div>
+
+        <div class="item-row" data-price="100">
+            <div class="item-info"><strong>Mojito</strong><small>100kr</small></div>
+            <div class="controls">
+                <button class="step-btn" onclick="step(this, -1)">-</button>
+                <input type="tel" class="qty-input" value="0" oninput="updateRow(this)" onclick="this.select()">
+                <button class="step-btn" onclick="step(this, 1)">+</button>
+            </div>
+        </div>
+
+        <div class="item-row" data-price="120">
+            <div class="item-info"><strong>Pina Colada</strong><small>120kr</small></div>
+            <div class="controls">
+                <button class="step-btn" onclick="step(this, -1)">-</button>
+                <input type="tel" class="qty-input" value="0" oninput="updateRow(this)" onclick="this.select()">
+                <button class="step-btn" onclick="step(this, 1)">+</button>
+            </div>
+        </div>
+
+        <div class="item-row" data-price="100">
+            <div class="item-info"><strong>Tequila</strong><small>100kr</small></div>
+            <div class="controls">
+                <button class="step-btn" onclick="step(this, -1)">-</button>
+                <input type="tel" class="qty-input" value="0" oninput="updateRow(this)" onclick="this.select()">
+                <button class="step-btn" onclick="step(this, 1)">+</button>
+            </div>
+        </div>
+
+        <div class="item-row" data-price="160">
+            <div class="item-info"><strong>Whiskey</strong><small>160kr</small></div>
+            <div class="controls">
+                <button class="step-btn" onclick="step(this, -1)">-</button>
+                <input type="tel" class="qty-input" value="0" oninput="updateRow(this)" onclick="this.select()">
+                <button class="step-btn" onclick="step(this, 1)">+</button>
+            </div>
+        </div>
+
+        <div class="item-row" data-price="80">
+            <div class="item-info"><strong>Shot</strong><small>80kr</small></div>
+            <div class="controls">
+                <button class="step-btn" onclick="step(this, -1)">-</button>
+                <input type="tel" class="qty-input" value="0" oninput="updateRow(this)" onclick="this.select()">
+                <button class="step-btn" onclick="step(this, 1)">+</button>
+            </div>
+        </div>
+
+        <div class="item-row" data-price="3000">
+            <div class="item-info"><strong>Caza Fortuna</strong><small>3000kr</small></div>
+            <div class="controls">
+                <button class="step-btn" onclick="step(this, -1)">-</button>
+                <input type="tel" class="qty-input" value="0" oninput="updateRow(this)" onclick="this.select()">
+                <button class="step-btn" onclick="step(this, 1)">+</button>
+            </div>
+        </div>
+
+        <div class="item-row" data-price="500">
+            <div class="item-info"><strong>Bleuterd Vintage</strong><small>500kr</small></div>
+            <div class="controls">
+                <button class="step-btn" onclick="step(this, -1)">-</button>
+                <input type="tel" class="qty-input" value="0" oninput="updateRow(this)" onclick="this.select()">
+                <button class="step-btn" onclick="step(this, 1)">+</button>
+            </div>
+        </div>
+
+        <div class="item-row" data-price="6000">
+            <div class="item-info"><strong>Bleuterd Gold</strong><small>6000kr</small></div>
+            <div class="controls">
+                <button class="step-btn" onclick="step(this, -1)">-</button>
+                <input type="tel" class="qty-input" value="0" oninput="updateRow(this)" onclick="this.select()">
+                <button class="step-btn" onclick="step(this, 1)">+</button>
+            </div>
+        </div>
+
+        <div class="item-row" data-price="10000">
+            <div class="item-info"><strong>Bleuterd Crystal</strong><small>10000kr</small></div>
+            <div class="controls">
+                <button class="step-btn" onclick="step(this, -1)">-</button>
+                <input type="tel" class="qty-input" value="0" oninput="updateRow(this)" onclick="this.select()">
+                <button class="step-btn" onclick="step(this, 1)">+</button>
+            </div>
+        </div>
+
+        <div class="item-row" data-price="300">
+            <div class="item-info"><strong>Vodka</strong><small>300kr</small></div>
+            <div class="controls">
+                <button class="step-btn" onclick="step(this, -1)">-</button>
+                <input type="tel" class="qty-input" value="0" oninput="updateRow(this)" onclick="this.select()">
+                <button class="step-btn" onclick="step(this, 1)">+</button>
+            </div>
+        </div>
+		
+		<div class="item-row" data-price="280">
+            <div class="item-info"><strong>Vinflaska</strong><small>280kr</small></div>
+            <div class="controls">
+                <button class="step-btn" onclick="step(this, -1)">-</button>
+                <input type="tel" class="qty-input" value="0" oninput="updateRow(this)" onclick="this.select()">
+                <button class="step-btn" onclick="step(this, 1)">+</button>
+            </div>
+        </div>
+		
+		<div class="item-row" data-price="120">
+            <div class="item-info"><strong>Öl</strong><small>120kr</small></div>
+            <div class="controls">
+                <button class="step-btn" onclick="step(this, -1)">-</button>
+                <input type="tel" class="qty-input" value="0" oninput="updateRow(this)" onclick="this.select()">
+                <button class="step-btn" onclick="step(this, 1)">+</button>
+            </div>
+        </div>
+		
+		<div class="item-row" data-price="20">
+            <div class="item-info"><strong>Vatten</strong><small>20kr</small></div>
+            <div class="controls">
+                <button class="step-btn" onclick="step(this, -1)">-</button>
+                <input type="tel" class="qty-input" value="0" oninput="updateRow(this)" onclick="this.select()">
+                <button class="step-btn" onclick="step(this, 1)">+</button>
+            </div>
+        </div>
+		
+		<div class="item-row" data-price="35">
+            <div class="item-info"><strong>Cola</strong><small>35kr</small></div>
+            <div class="controls">
+                <button class="step-btn" onclick="step(this, -1)">-</button>
+                <input type="tel" class="qty-input" value="0" oninput="updateRow(this)" onclick="this.select()">
+                <button class="step-btn" onclick="step(this, 1)">+</button>
+            </div>
+        </div>
+		
+		<div class="item-row" data-price="45">
+            <div class="item-info"><strong>Ostchips</strong><small>45kr</small></div>
+            <div class="controls">
+                <button class="step-btn" onclick="step(this, -1)">-</button>
+                <input type="tel" class="qty-input" value="0" oninput="updateRow(this)" onclick="this.select()">
+                <button class="step-btn" onclick="step(this, 1)">+</button>
+            </div>
+        </div>
+		
+		<div class="item-row" data-price="45">
+            <div class="item-info"><strong>Habanero chips</strong><small>45kr</small></div>
+            <div class="controls">
+                <button class="step-btn" onclick="step(this, -1)">-</button>
+                <input type="tel" class="qty-input" value="0" oninput="updateRow(this)" onclick="this.select()">
+                <button class="step-btn" onclick="step(this, 1)">+</button>
+            </div>
+        </div>
+		
+		<div class="item-row" data-price="45">
+            <div class="item-info"><strong>Revbenschips</strong><small>45kr</small></div>
+            <div class="controls">
+                <button class="step-btn" onclick="step(this, -1)">-</button>
+                <input type="tel" class="qty-input" value="0" oninput="updateRow(this)" onclick="this.select()">
+                <button class="step-btn" onclick="step(this, 1)">+</button>
+            </div>
+        </div>
+		
+		<div class="item-row" data-price="45">
+            <div class="item-info"><strong>Saltade chips</strong><small>45kr</small></div>
+            <div class="controls">
+                <button class="step-btn" onclick="step(this, -1)">-</button>
+                <input type="tel" class="qty-input" value="0" oninput="updateRow(this)" onclick="this.select()">
+                <button class="step-btn" onclick="step(this, 1)">+</button>
+            </div>
+        </div>
+		
+		<div class="item-row" data-price="30">
+            <div class="item-info"><strong>Godis</strong><small>30kr</small></div>
+            <div class="controls">
+                <button class="step-btn" onclick="step(this, -1)">-</button>
+                <input type="tel" class="qty-input" value="0" oninput="updateRow(this)" onclick="this.select()">
+                <button class="step-btn" onclick="step(this, 1)">+</button>
+            </div>
+        </div>
+		
+		<div class="item-row" data-price="45">
+            <div class="item-info"><strong>Pepperonipizza</strong><small>45kr</small></div>
+            <div class="controls">
+                <button class="step-btn" onclick="step(this, -1)">-</button>
+                <input type="tel" class="qty-input" value="0" oninput="updateRow(this)" onclick="this.select()">
+                <button class="step-btn" onclick="step(this, 1)">+</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="discount-container">
+        <span class="discount-label">Rabatt</span>
+        <div class="discount-group">
+            <button id="btn-0" class="disc-btn active" onclick="setDiscount(0)">0%</button>
+            <button id="btn-10" class="disc-btn" onclick="setDiscount(10)">10%</button>
+            <button id="btn-20" class="disc-btn" onclick="setDiscount(20)">20%</button>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div class="sub-box"><span>Delsumma:</span> <span><span id="subtotal">0</span> kr</span></div>
+        <div class="total-box"><span>TOTALT:</span> <span><span id="grand-total">0</span> kr</span></div>
+        <button class="btn-clear" onclick="resetAll()">Töm Beställning</button>
+    </div>
+
+    <script>
+        let discountLevel = 0;
+
+        function step(btn, delta) {
+            const input = btn.parentElement.querySelector('.qty-input');
+            let val = (parseInt(input.value) || 0) + delta;
+            input.value = val < 0 ? 0 : val;
+            updateRow(input);
+        }
+
+        function updateRow(input) {
+            const row = input.closest('.item-row');
+            const val = parseInt(input.value) || 0;
+            if (val > 0) row.classList.add('has-items');
+            else row.classList.remove('has-items');
+            calculate();
+        }
+
+        function setDiscount(level) {
+            discountLevel = level;
+            
+            // UI Update: Remove active class from all, then add to selected
+            document.querySelectorAll('.disc-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('btn-' + level).classList.add('active');
+            
+            calculate();
+        }
+
+        function calculate() {
+            let subtotal = 0;
+            document.querySelectorAll('.item-row').forEach(row => {
+                const price = parseInt(row.dataset.price);
+                const input = row.querySelector('.qty-input');
+                const qty = parseInt(input.value) || 0;
+                subtotal += price * qty;
+            });
+
+            let multiplier = (100 - discountLevel) / 100;
+            let finalTotal = subtotal * multiplier;
+
+            document.getElementById('subtotal').innerText = subtotal;
+            document.getElementById('grand-total').innerText = Math.round(finalTotal);
+        }
+
+        function resetAll() {
+            if(confirm("Rensa allt?")) {
+                document.querySelectorAll('.qty-input').forEach(i => i.value = 0);
+                document.querySelectorAll('.item-row').forEach(r => r.classList.remove('has-items'));
+                
+                // Reset discount to 0%
+                setDiscount(0);
+                calculate();
+            }
+        }
+    </script>
+</body>
+</html>
